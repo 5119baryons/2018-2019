@@ -313,6 +313,7 @@ public class Robot {
 
     }
 
+    //STATE MACHINE
     //Methods: pick up mineral, drop mineral, arm extension, retract arm, gold left, gold middle, gold right custom extend, state machine(boolean)
     //state: 0=default-custom extend, 1=extend, 2=collect, 3=retract, 4=dump
            public void customExtend(double power)
@@ -387,6 +388,9 @@ public class Robot {
             wrist.setPosition(WRIST_UP);
             STATE=4;
         }
+
+    //End of STATE MACHINE Code
+
         public int getRakePosition(){
             return rake.getCurrentPosition();
         }

@@ -226,6 +226,8 @@ public class TwoControllerTeleOp extends OpMode {
             robot.startRetraction();
         }
 
+        //End of STATE MACHINE Code
+
         if(controller2.dpadUpOnce())
             robot.incrementWrist();
         if(controller2.dpadDownOnce())
