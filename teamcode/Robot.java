@@ -74,7 +74,7 @@ public class Robot {
     //private final Servo relicArmGripper;
     private final DcMotor flipper;
     private final Servo tm;
-    private final CRServo sweeper;
+//    private final CRServo sweeper;
 //    private final Servo relicClaw;
   //  public final NormalizedColorSensor colorSensor;
 
@@ -96,12 +96,12 @@ public class Robot {
     private final int LIFT_DISTANCE=-1400;//600
 
     //Rake variables
-    private final int MAX_RAKE_TICKS=0;
+    private final int MAX_RAKE_TICKS=10000;
     private final int UNLOAD_RAKE_TICKS=0;
-    private final int MIDDLE_GOLD_TICKS=0;
-    private final int RIGHT_GOLD_TICKS=0;
-    private final int LEFT_GOLD_TICKS=0;
-    private final int LOAD_RAKE_TICKS=0;
+    public final int MIDDLE_GOLD_TICKS=0;
+    public final int RIGHT_GOLD_TICKS=0;
+    public final int LEFT_GOLD_TICKS=0;
+    public final int LOAD_RAKE_TICKS=5000;
     public int STATE=0;
     private final double WRIST_DOWN=0;
     private final double WRIST_MIDDLE=0.3;
@@ -257,7 +257,7 @@ public class Robot {
         //relicArmGripper = hardwareMap.servo.get("");
         flipper = hardwareMap.dcMotor.get("flipper");
         tm = hardwareMap.servo.get("tm");
-        sweeper = hardwareMap.crservo.get("sweeper");
+  //      sweeper = hardwareMap.crservo.get("sweeper");
      //   colorSensor = hardwareMap.get(NormalizedColorSensor.class, "cs");
 
 //        rake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -314,23 +314,26 @@ public class Robot {
     }
 
     //Methods: pick up mineral, drop mineral, arm extension, retract arm, gold left, gold middle, gold right custom extend, state machine(boolean)
-    //state: 0=default-custom extend, 1=extend, 2=,collect, 3=retract, 4=dump
+    //state: 0=default-custom extend, 1=extend, 2=collect, 3=retract, 4=dump
            public void customExtend(double power)
            {
                if (power>=0)
                    rake.setTargetPosition(MAX_RAKE_TICKS);
                else
                    rake.setTargetPosition(UNLOAD_RAKE_TICKS);
-               rake.setPower(Math.abs(power));
+               rake.setPower(Math.abs(power/8));
 
            }
 
+           public void startExtend(int ticks){
+                rake.setTargetPosition(ticks);
+                STATE=1;
+           }
            public void extend()
            {
                rake.setPower(0.3);
                if (rake.getCurrentPosition()>rake.getTargetPosition()-25)
                    STATE=0;
-
            }
            public void collect()
            {
@@ -350,21 +353,29 @@ public class Robot {
                 WRIST_TIMER=runtime.seconds()+.3;
                 collecting=true;
                 wrist.setPosition(WRIST_DOWN);
+                STATE=2;
            }
-           public void retract()
+           public void startRetraction()
            {
                rake.setTargetPosition(UNLOAD_RAKE_TICKS);
                rake.setPower(0.3);
+               STATE=3;
+           }
+           public void retract(){
+               if (rake.getCurrentPosition()>rake.getTargetPosition()-25) {
+                   startDumping();
+                   //rake.setPower(0);
+               }
            }
         public void dump()
         {
-            if(WRIST_TIMER<runtime.seconds() && collecting) {
-                collecting = false;
-                raising = true;
+            if(WRIST_TIMER<runtime.seconds() && raising) {
+                collecting = true;
+                raising = false;
                 WRIST_TIMER+=.3;
                 wrist.setPosition(WRIST_MIDDLE);
             }
-            if(WRIST_TIMER<runtime.seconds() && raising) {
+            if(WRIST_TIMER<runtime.seconds() && collecting) {
                 raising = false;
                 STATE=0;
             }
@@ -374,6 +385,20 @@ public class Robot {
             WRIST_TIMER=runtime.seconds()+.3;
             raising=true;
             wrist.setPosition(WRIST_UP);
+            STATE=4;
+        }
+        public int getRakePosition(){
+            return rake.getCurrentPosition();
+        }
+
+        public void incrementWrist(){
+            wrist.setPosition(Math.min(wrist.getPosition()+.05,1));
+        }
+        public void decrementWrist(){
+            wrist.setPosition(Math.max(wrist.getPosition()-.05,0));
+        }
+        public double getWristPosition(){
+        return wrist.getPosition();
         }
 
     private void initVuforia() {
@@ -1821,9 +1846,9 @@ public class Robot {
         flipper.setPower(power/12);
     }
 
-    public void moveSweeper(double pow){
-        sweeper.setPower(pow);//pow/2+.5
-    }
+//    public void moveSweeper(double pow){
+//        sweeper.setPower(pow);//pow/2+.5
+//    }
 
     public void getGyroGravity(){
         telemetry.addData("Gravity: ",imu.getGravity());

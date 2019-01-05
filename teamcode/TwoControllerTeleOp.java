@@ -149,17 +149,17 @@ public class TwoControllerTeleOp extends OpMode {
         robot.setMotors(leftPower, rightPower);
 
 
-        if(controller2.rightTriggerPressed())
-            robot.moveSweeper(controller2.right_trigger);
-        else
-            robot.moveSweeper(-1*controller2.left_trigger);
-        if(controller2.A())
-            robot.moveSweeper(1);
-
-        if(controller2.AOnce())
-            robot.incrementTmUp();
-        if(controller2.BOnce())
-            robot.incrementTmDown();
+//        if(controller2.rightTriggerPressed())
+//            robot.moveSweeper(controller2.right_trigger);
+//        else
+//            robot.moveSweeper(-1*controller2.left_trigger);
+//        if(controller2.A())
+//            robot.moveSweeper(1);
+//
+//        if(controller2.AOnce())
+//            robot.incrementTmUp();
+//        if(controller2.BOnce())
+//            robot.incrementTmDown();
         if(controller2.XOnce()) {
             if (robot.getTmPosition() == 0)
                 robot.deployTeamMarker();
@@ -197,11 +197,43 @@ public class TwoControllerTeleOp extends OpMode {
 //        if(controller2.XOnce())
 //            robot.customtoggleLifter();
 
-
-        robot.moveLifter(controller2.left_stick_y);
+        if(controller2.rightTriggerPressed())
+             robot.moveLifter(controller2.right_trigger);
+        else if(controller2.leftTriggerPressed())
+            robot.moveLifter(controller2.left_trigger*-1);
 
         robot.setFlipperPower(controller2.right_stick_y);
-//        telemetry.addData("Current Position: ",robot.currentPosition);
+
+        //STATE MACHINE
+        if(robot.STATE==0)
+            robot.customExtend(controller2.left_stick_y);
+        if(robot.STATE==1)
+            robot.extend();
+        if(robot.STATE==2)
+            robot.collect();
+        if(robot.STATE==3)
+            robot.retract();
+        if(robot.STATE==4)
+            robot.dump();
+
+        if(controller2.AOnce()){
+            robot.startExtend(robot.LOAD_RAKE_TICKS);
+        }
+        if(controller2.BOnce()){
+            robot.startCollection();
+        }
+        if(controller2.YOnce()){
+            robot.startRetraction();
+        }
+
+        if(controller2.dpadUpOnce())
+            robot.incrementWrist();
+        if(controller2.dpadDownOnce())
+            robot.decrementWrist();
+
+        telemetry.addData("Rake Current Position: ",robot.getRakePosition());
+        telemetry.addData("Wrist Current Position: ",robot.getWristPosition());
+        //        telemetry.addData("Current Position: ",robot.currentPosition);
 //        telemetry.addData("X: ",robot.currentPosition.x);
 //        telemetry.addData("Y: ",robot.currentPosition.y);
 //        telemetry.addData("Z: ",robot.currentPosition.z);
