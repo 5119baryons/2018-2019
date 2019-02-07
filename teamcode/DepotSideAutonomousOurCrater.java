@@ -11,8 +11,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 
 
-@Autonomous(name = "Start Depot End Other Crater")
-public class DepotSideAutonomousTensor extends LinearOpMode{
+@Autonomous(name = "Start Depot End Our Crater")
+public class DepotSideAutonomousOurCrater extends LinearOpMode{
     private Robot robot;
     private int gyroCalibratedCount = 0;
     private double lastHeading = 0;
@@ -58,7 +58,7 @@ public class DepotSideAutonomousTensor extends LinearOpMode{
 //        idle();
 
 
-        if(path==1){
+        if(path==1){//left
             robot.encoderRun(3,.2);
             sleep(1000);
             robot.finishMovement();
@@ -106,7 +106,7 @@ public class DepotSideAutonomousTensor extends LinearOpMode{
             telemetry.update();
             idle();
 
-            robot.encoderTurn(190,.25);
+            robot.encoderTurn(90,.25);
             sleep(4000);
             robot.finishMovement();
             idle();
@@ -163,7 +163,7 @@ public class DepotSideAutonomousTensor extends LinearOpMode{
             telemetry.update();
             idle();
 
-            robot.encoderTurn(-95,.2);
+            robot.encoderTurn(-195,.2);
             sleep(3000);
             robot.finishMovement();
             idle();
@@ -193,7 +193,7 @@ public class DepotSideAutonomousTensor extends LinearOpMode{
 //            idle();
 //            robot.setFlipperPower(0);
 
-            robot.encoderTurn(-135,.2);
+            robot.encoderTurn(135,.2);
             sleep(5000);
             robot.finishMovement();
             idle();

@@ -36,7 +36,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 @Disabled
 public class Practice2 extends OpMode {
     // Declare OpMode members.
-    //private ElapsedTime runtime = new ElapsedTime();
+    private ElapsedTime runtime = new ElapsedTime();
     private DcMotor leftDrive = null;
     private DcMotor leftDrivee = null;
     private DcMotor rightDrivee = null;
@@ -54,8 +54,13 @@ public class Practice2 extends OpMode {
     private boolean isMoving=false;
     private final double teamSlackers = 999;
     private final int maxTicks=2500;
+    private final int minTicks=-2500;
     private boolean movingRake=false;
     private DcMotor rakeMotor = null;
+
+    public int STATE=0;
+    private double driveTime=0;
+
 
 
     @Override
@@ -131,7 +136,23 @@ public class Practice2 extends OpMode {
             slowMotorFlip();
             moveServo();
         }
+        if(STATE==1)
+            forwardMoving();
+        if(STATE==2)
+            backMoving();
+        if(STATE==3)
+            turnMoving();
 
+        if(controller1.AOnce())
+        {
+            forward();
+        }
+        if(controller1.BOnce())
+        {
+            back();
+        }
+        if(controller1.YOnce())
+            turn();
 
         if(movingRake)
             moveRake();
@@ -151,6 +172,11 @@ public class Practice2 extends OpMode {
 
 
         }
+
+
+
+
+
 
 
     }
@@ -213,6 +239,101 @@ public class Practice2 extends OpMode {
             rakeMotor.setTargetPosition((int)(maxTicks*-1*controller1.left_stick_y));
             rakeMotor.setPower(1);
             }
+
+            //STATE MACHINE
+            //STATE 0-drive around,
+            //press a to go forward 1000 ticks
+            //press b to go back for 3 seconds
+            //press y to turn for 1000 ticks then go forward 1000 ticks
+
+
+
+
+
+            public void forward() {
+                STATE = 1;
+                rightDrivee.setPower(.2);
+                leftDrivee.setPower(.2);
+                rightDrivee.setTargetPosition(rightDrivee.getCurrentPosition()+1000);
+                leftDrivee.setTargetPosition(leftDrivee.getCurrentPosition()+1000);
+                }
+
+                public void forwardMoving() {
+
+                if(rightDrivee.getCurrentPosition()>rightDrivee.getTargetPosition()-25)
+                    if(leftDrivee.getCurrentPosition()>leftDrivee.getTargetPosition()-25)
+                        STATE=0;
+
+                }
+
+
+                public void back() {
+
+                    STATE = 2;
+                    driveTime=runtime.seconds()+3;
+                    rightDrivee.setTargetPosition(minTicks);
+                    leftDrivee.setTargetPosition(minTicks);
+                    rightDrivee.setPower(.2);
+                    leftDrivee.setPower(.2);
+
+                }
+                public void backMoving() {
+                    if(driveTime<runtime.seconds())
+                        STATE=0;
+
+
+                }
+
+                public void turn(){
+                    STATE=3;
+                    rightDrivee.setPower(.2);
+                    leftDrivee.setPower(.2);
+                    rightDrivee.setTargetPosition(rightDrivee.getCurrentPosition()-1000);
+                    leftDrivee.setTargetPosition(leftDrivee.getCurrentPosition()+1000);
+
+
+                }
+
+                public void turnMoving() {
+
+                    if(rightDrivee.getCurrentPosition()<rightDrivee.getTargetPosition()+25)
+                        if(leftDrivee.getCurrentPosition()>leftDrivee.getTargetPosition()-25)
+                            forward();
+                }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

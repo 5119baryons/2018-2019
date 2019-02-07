@@ -92,23 +92,25 @@ public class Robot {
 
     private final double RADIUS_OF_SPOOL = .625;
     private final int LOCK_DISTANCE = -2100;//2600
-    private final int UNLOCK_DISTANCE = -2600;//2900
+    private final int UNLOCK_DISTANCE = -2500;//2900
     private final int LIFT_DISTANCE=-1400;//600
 
     //Rake variables
-    private final int MAX_RAKE_TICKS=10000;
-    private final int UNLOAD_RAKE_TICKS=0;
+    private final int MAX_RAKE_TICKS=2800;
+    private final int UNLOAD_RAKE_TICKS=450;
     public final int MIDDLE_GOLD_TICKS=0;
     public final int RIGHT_GOLD_TICKS=0;
     public final int LEFT_GOLD_TICKS=0;
-    public final int LOAD_RAKE_TICKS=5000;
+    public final int LOAD_RAKE_TICKS=2000;
     public int STATE=0;
-    private final double WRIST_DOWN=0;
-    private final double WRIST_MIDDLE=0.3;
-    private final double WRIST_UP=1;
+    private final double WRIST_DOWN=.8;
+    private final double WRIST_HOVER=.52;
+    private final double WRIST_MIDDLE=0.42;
+    private final double WRIST_UP=0;
     private double WRIST_TIMER=0;
     private boolean collecting=false;
     private boolean raising=false;
+    private boolean lifting=false;
 
     private final double GRIPPER1_CLOSED = .4;
     private final double GRIPPER1_OPEN = 0.0;
@@ -164,6 +166,8 @@ public class Robot {
     private boolean isLocked = false;
     private boolean isUnlocked = false;
     private boolean isLifted = false;
+
+    private boolean movingRight=false;
 
     public Position currentPosition;
     public Velocity currentVeloity;
@@ -266,13 +270,14 @@ public class Robot {
 
         right.setDirection(DcMotorSimple.Direction.REVERSE);
        // flipper.setDirection(DcMotorSimple.Direction.REVERSE);
-//        rake.setDirection(DcMotorSimple.Direction.REVERSE);
+        //rake.setDirection(DcMotorSimple.Direction.REVERSE);
         flipperLastPosition = flipper.getCurrentPosition();
 
 
         left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         flipper.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         lifter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lifter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -322,74 +327,88 @@ public class Robot {
                    rake.setTargetPosition(MAX_RAKE_TICKS);
                else
                    rake.setTargetPosition(UNLOAD_RAKE_TICKS);
-               rake.setPower(Math.abs(power/8));
+               rake.setPower(Math.abs(power));
 
            }
 
            public void startExtend(int ticks){
                 rake.setTargetPosition(ticks);
                 STATE=1;
+                wrist.setPosition(WRIST_MIDDLE);
            }
            public void extend()
            {
-               rake.setPower(0.3);
-               if (rake.getCurrentPosition()>rake.getTargetPosition()-25)
-                   STATE=0;
+               rake.setPower(1);
+               if (rake.getCurrentPosition()>rake.getTargetPosition()-25) {
+                   STATE = 0;
+                    wrist.setPosition(WRIST_HOVER);
+               }
            }
-           public void collect()
+           public void collect(boolean b)
            {
-                if(WRIST_TIMER<runtime.seconds() && collecting) {
-                    collecting = false;
-                    raising = true;
-                    WRIST_TIMER+=.3;
-                    wrist.setPosition(WRIST_MIDDLE);
+                if(WRIST_TIMER<runtime.seconds() && raising) {
+                    raising = false;
+                    collecting = true;
+                    WRIST_TIMER+=.25;
+                    wrist.setPosition(WRIST_DOWN);
                 }
-               if(WRIST_TIMER<runtime.seconds() && raising) {
+               if(WRIST_TIMER<runtime.seconds() && collecting && !b) {
+                   collecting = false;
+                   lifting=true;
+                   WRIST_TIMER+=.25;
+                   wrist.setPosition(WRIST_HOVER);
+               }
+               if(WRIST_TIMER<runtime.seconds() && lifting) {
+                    lifting=false;
+                    STATE=0;
+               }
+
+               }
+           public void startCollection()
+           {
+                WRIST_TIMER=runtime.seconds()+.15;
+                raising=true;
+                wrist.setPosition(WRIST_MIDDLE);
+                rake.setPower(0);
+                STATE=2;
+                }
+
+
+           public void startRetraction()
+           {
+               rake.setTargetPosition(UNLOAD_RAKE_TICKS);
+               rake.setPower(1);
+               STATE=3;
+               wrist.setPosition(WRIST_MIDDLE);
+           }
+           public void retract(){
+               if (rake.getCurrentPosition()<rake.getTargetPosition()+25) {
+                   startDumping();
+               }
+           }
+           public void dump()
+           {
+               if(WRIST_TIMER<runtime.seconds() && raising ) {
                    raising = false;
                    STATE=0;
                }
            }
-           public void startCollection()
+           public void startDumping()
            {
-                WRIST_TIMER=runtime.seconds()+.3;
-                collecting=true;
-                wrist.setPosition(WRIST_DOWN);
-                STATE=2;
+               WRIST_TIMER=runtime.seconds()+1.3;
+               raising=true;
+               wrist.setPosition(WRIST_UP);
+               STATE=4;
            }
-           public void startRetraction()
-           {
-               rake.setTargetPosition(UNLOAD_RAKE_TICKS);
-               rake.setPower(0.3);
-               STATE=3;
-           }
-           public void retract(){
-               if (rake.getCurrentPosition()>rake.getTargetPosition()-25) {
-                   startDumping();
-                   //rake.setPower(0);
-               }
-           }
-        public void dump()
-        {
-            if(WRIST_TIMER<runtime.seconds() && raising) {
-                collecting = true;
-                raising = false;
-                WRIST_TIMER+=.3;
-                wrist.setPosition(WRIST_MIDDLE);
-            }
-            if(WRIST_TIMER<runtime.seconds() && collecting) {
-                raising = false;
-                STATE=0;
-            }
-        }
-        public void startDumping()
-        {
-            WRIST_TIMER=runtime.seconds()+.3;
-            raising=true;
-            wrist.setPosition(WRIST_UP);
-            STATE=4;
-        }
 
     //End of STATE MACHINE Code
+
+        public void setWRIST_DOWN(){
+            wrist.setPosition(WRIST_DOWN);
+        }
+        public void setWRIST_MIDDLE(){
+            wrist.setPosition(WRIST_MIDDLE);
+        }
 
         public int getRakePosition(){
             return rake.getCurrentPosition();
@@ -452,11 +471,10 @@ public class Robot {
                     for (Recognition recognition : updatedRecognitions) {
                         if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
                             goldMineralX = (int) recognition.getTop();
-//                            telemetry.addData("Gold Left: ",(int) recognition.getLeft());
-//                            telemetry.addData("Gold Right: ",(int) recognition.getRight());
-//                            telemetry.addData("Gold Top: ",(int) recognition.getTop());
-//                            telemetry.addData("Gold Bottom: ",(int) recognition.getBottom());
-//                            telemetry.addData("Gold Confidence: ",(int) recognition.getConfidence());
+                            telemetry.addData("Gold Left: ",(int) recognition.getLeft());
+                            telemetry.addData("Gold Right: ",(int) recognition.getRight());
+                            telemetry.addData("Gold Top: ",(int) recognition.getTop());
+                            telemetry.addData("Gold Bottom: ",(int) recognition.getBottom());
 
                         } else if (silverMineral1X == -1) {
                             silverMineral1X = (int) recognition.getTop();
@@ -525,33 +543,20 @@ public class Robot {
                 }
                 if (updatedRecognitions.size() >= 2 || foundGold) {
                     int goldMineralX = -1;
-                    int silverMineral1X = -1;
-                    int silverMineral2X = -1;
                     for (Recognition recognition : updatedRecognitions) {
                         if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
                             goldMineralX = (int) recognition.getLeft();
-//                            telemetry.addData("Gold Left: ",(int) recognition.getLeft());
-//                            telemetry.addData("Gold Right: ",(int) recognition.getRight());
-//                            telemetry.addData("Gold Top: ",(int) recognition.getTop());
-//                            telemetry.addData("Gold Bottom: ",(int) recognition.getBottom());
-//                            telemetry.addData("Gold Confidence: ",(int) recognition.getConfidence());
-
                         }
                     }
                     if(goldMineralX!=-1){
-                        if(goldMineralX<500)
+                        if(goldMineralX<250)
                             return 2;
-                        else if(goldMineralX>500)
+                        else if(goldMineralX>250)
                             return 3;
                     }
                     else{
                        return 1;
                     }
-
-
-
-
-
                     //                    if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
 //                        if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
 //                            telemetry.addData("Gold Mineral Position", "Left");
@@ -590,6 +595,10 @@ public class Robot {
         setMotorMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER, left, right);
     }
 
+    public void runToPosition() {
+        setMotorMode(DcMotor.RunMode.RUN_TO_POSITION, left, right);
+    }
+
     /**
      * @return true if the gyro is fully calibrated, false otherwise
      */
@@ -613,7 +622,7 @@ public class Robot {
      * expensive.
      */
     public void loop() {
-        //angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
 //        currentPosition=imu.getPosition();
 //        currentVeloity=imu.getVelocity();
 //        currentAcceleration=imu.getAcceleration();
@@ -660,10 +669,40 @@ public class Robot {
 
     }
 
+    public DcMotor.RunMode getRunMode(){
+        return right.getMode();
+    }
 
+    public boolean movingWithEncoders(){
+        if(movingRight) {
+            if (right.getCurrentPosition() > right.getTargetPosition() - 25 && left.getCurrentPosition() < left.getTargetPosition() + 25)
+                return false;
+        }
+        else
+            if(right.getCurrentPosition()<right.getTargetPosition()+25&&left.getCurrentPosition()>left.getTargetPosition()-25)
+                return false;
+        return true;
+    }
 
+    public void incrementRobotRight(){
+        movingRight=true;
+        if(right.getMode()== DcMotor.RunMode.RUN_WITHOUT_ENCODER){
+            runToPosition();
+        }
+        right.setTargetPosition(right.getCurrentPosition()+50);
+        left.setTargetPosition(left.getCurrentPosition()-50);
+        setMotors(.6,.6);
+    }
 
-
+    public void incrementRobotLeft(){
+        movingRight=false;
+        if(left.getMode()== DcMotor.RunMode.RUN_WITHOUT_ENCODER){
+            runToPosition();
+        }
+        left.setTargetPosition(left.getCurrentPosition()+50);
+        right.setTargetPosition(right.getCurrentPosition()-50);
+        setMotors(.6,.6);
+    }
 
 
 
@@ -682,7 +721,9 @@ public class Robot {
      * @return the robot's current heading in radians
      */
     public double getHeading() {
-        return (getRawHeading() - headingOffset) % (2.0 * Math.PI);
+        if(getRawHeading()-headingOffset>0)
+            return (getRawHeading() - headingOffset) % (2.0 * Math.PI);
+        return ((getRawHeading() - headingOffset)) % (2.0 * Math.PI)+2.0 * Math.PI;
     }
 
     /**
@@ -987,11 +1028,13 @@ public class Robot {
     }
 
     public void deployTeamMarker(){
-        tm.setPosition(0);
-    }
-    public void undeployTeamMarker(){
         tm.setPosition(1);
     }
+    public void undeployTeamMarker(){
+        tm.setPosition(.3);
+    }
+
+
     public double getTmPosition(){
         return tm.getPosition();
     }
@@ -1106,7 +1149,7 @@ public class Robot {
 //    }
 
     public void moveLifter(double power){
-        lifter.setPower(power/4);
+        lifter.setPower(power/2);
     }
 
     public int getLifterPosition(){
@@ -1130,12 +1173,24 @@ public class Robot {
         right.setPower(power);
     }
 
+    public void encoderRunTurn(double runDistance, double angle, double rightPower, double leftPower){
+        int runTicks= (int)(-1*runDistance*(1/(Math.PI*WHEEL_DIAMETER))*GEAR_RATIO*TICKS_PER_MOTOR_REV);
+        double distance=angle*Math.PI/180*robotRadius;
+        int turnTicks=(int)(-1*distance*(1/(Math.PI*WHEEL_DIAMETER))*GEAR_RATIO*TICKS_PER_MOTOR_REV);
+        left.setTargetPosition(left.getCurrentPosition()+runTicks+turnTicks);
+        right.setTargetPosition(right.getCurrentPosition()+runTicks-turnTicks);
+        left.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        right.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        left.setPower(leftPower);
+        right.setPower(rightPower);
+    }
+
     public void finishMovement(){
         left.setPower(0);
         right.setPower(0);
 
-        left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        right.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        left.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        right.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
 
@@ -1847,7 +1902,7 @@ public class Robot {
     }
 
     public void setFlipperPower(double power){
-        flipper.setPower(power/12);
+        flipper.setPower(power/8);
     }
 
 //    public void moveSweeper(double pow){

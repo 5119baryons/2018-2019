@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
@@ -22,16 +23,20 @@ public class TwoControllerTeleOp extends OpMode {
 
     private boolean gyroRotate;
     private boolean tankDrive=false;
-    private double targetAngle;
+    private double targetAngle=0;
     private double currentAngle;
     private double angleDifference;
     private double angleDirection;
+    private boolean movingCW=true;
 //    private Position initialPosition;
 //    private Velocity initialVelocity;
-
+    private boolean bLast=false;
     private double governor = 0.75;
     private double rotationGovernor = 0.3;
     private double lastHeading = 0.0;
+
+    private boolean incrementingRobot=false;
+
 //    private boolean accelerometerCalibrated=false;
 
 //    private List<VuforiaTrackable> allTrackables=null;
@@ -42,7 +47,7 @@ public class TwoControllerTeleOp extends OpMode {
         robot.runUsingEncoders();
         controller1 = new Controller(gamepad1);
         controller2 = new Controller(gamepad2);
-//        initialPosition= new Position(DistanceUnit.METER,0,0,0,0);
+        //        initialPosition= new Position(DistanceUnit.METER,0,0,0,0);
 //        initialVelocity= new Velocity(DistanceUnit.METER,0,0,0,0);
        // allTrackables=robot.vuforiaInit();
         robot.shutdownTensorFlow();
@@ -80,6 +85,7 @@ public class TwoControllerTeleOp extends OpMode {
 
         double heading = robot.getHeading();
         double headingDelta = 0.0;
+
 //        if(controller1.dpadDown()){
 //            robot.moveLifterDown();
 //        } else if(controller1.dpadUp()) {
@@ -138,28 +144,41 @@ public class TwoControllerTeleOp extends OpMode {
 //        telemetry.addData("Robot.Rotation: ",robot.rotation);
 //        telemetry.addData("Is Blue on Left? ",robot.isBlueOnLeft());
 
-        //if(tankDrive){
-        double leftPower=Math.pow(controller1.left_stick_y,3);
-        double rightPower=Math.pow(controller1.right_stick_y,3);
-        //}
+        double leftPower=Math.pow(controller1.left_stick_y,3)*.5;
+        double rightPower=Math.pow(controller1.right_stick_y,3)*.5;
+
+        if(controller2.rightBumper()) {
+            leftPower += -.3;
+            rightPower += .3;
+        }
+        else if(controller2.leftBumper()) {
+            leftPower += .3;
+            rightPower += -.3;
+        }
+
         if(robot.flippingOver()){
             leftPower=1;
             rightPower=1;
         }
-        robot.setMotors(leftPower, rightPower);
+//        if(controller2.rightBumperOnce()) {
+//            robot.incrementRobotRight();
+//            incrementingRobot=true;
+//        }
+//        else if(controller2.leftBumperOnce()) {
+//            robot.incrementRobotLeft();
+//            incrementingRobot=true;
+//        }
+//        if(incrementingRobot){
+//            if(!robot.movingWithEncoders()) {
+//                incrementingRobot = false;
+//                robot.runWithoutEncoders();
+//            }
+//        }
+//        if(!incrementingRobot){
+            robot.setMotors(leftPower, rightPower);
+//       }
 
 
-//        if(controller2.rightTriggerPressed())
-//            robot.moveSweeper(controller2.right_trigger);
-//        else
-//            robot.moveSweeper(-1*controller2.left_trigger);
-//        if(controller2.A())
-//            robot.moveSweeper(1);
-//
-//        if(controller2.AOnce())
-//            robot.incrementTmUp();
-//        if(controller2.BOnce())
-//            robot.incrementTmDown();
         if(controller2.XOnce()) {
             if (robot.getTmPosition() == 0)
                 robot.deployTeamMarker();
@@ -198,33 +217,60 @@ public class TwoControllerTeleOp extends OpMode {
 //            robot.customtoggleLifter();
 
         if(controller2.rightTriggerPressed())
-             robot.moveLifter(controller2.right_trigger);
+             robot.moveLifter(controller2.right_trigger*-1);
         else if(controller2.leftTriggerPressed())
-            robot.moveLifter(controller2.left_trigger*-1);
+            robot.moveLifter(controller2.left_trigger);
+        else
+            robot.moveLifter(0);
 
-        robot.setFlipperPower(controller2.right_stick_y);
+        if(controller1.rightTriggerPressed())
+            robot.setFlipperPower(controller1.right_trigger);
+        else if(controller1.leftTriggerPressed())
+            robot.setFlipperPower(controller1.left_trigger*-1);
+        else
+            robot.setFlipperPower(0);
+
+
+
+//        if(controller2.B()){
+//             robot.setWRIST_DOWN();
+//             bLast=true;
+//             }
+//            if(!controller2.B()&&bLast){
+//                bLast=false;
+//                robot.setWRIST_MIDDLE();
+//            }
+
+
+
+if(controller2.XOnce())
+    robot.setWRIST_MIDDLE();
+
 
         //STATE MACHINE
-        if(robot.STATE==0)
-            robot.customExtend(controller2.left_stick_y);
+        if(robot.STATE==0 || robot.STATE==2)
+            robot.customExtend(controller2.left_stick_y*-1/2);
         if(robot.STATE==1)
             robot.extend();
         if(robot.STATE==2)
-            robot.collect();
+            robot.collect(controller2.B());
         if(robot.STATE==3)
             robot.retract();
         if(robot.STATE==4)
             robot.dump();
 
-        if(controller2.AOnce()){
+        if(controller2.YOnce()){
             robot.startExtend(robot.LOAD_RAKE_TICKS);
         }
         if(controller2.BOnce()){
             robot.startCollection();
         }
-        if(controller2.YOnce()){
+        if(controller2.AOnce()){
             robot.startRetraction();
         }
+//        if(controller1.rightTriggerPressed()){
+//            robot.startExtend(1500);
+//        }
 
         //End of STATE MACHINE Code
 
