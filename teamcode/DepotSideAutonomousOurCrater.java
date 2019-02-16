@@ -204,7 +204,7 @@ public class DepotSideAutonomousOurCrater extends LinearOpMode{
 
         robot.deployTeamMarker();
         idle();
-        sleep(500);
+        sleep(1500);
         telemetry.addData("Team Marker Deployed","");
         telemetry.update();
         idle();

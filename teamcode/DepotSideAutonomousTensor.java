@@ -209,6 +209,13 @@ public class DepotSideAutonomousTensor extends LinearOpMode{
         telemetry.update();
         idle();
 
+        robot.undeployTeamMarker();
+        idle();
+        sleep(500);
+        telemetry.addData("Team Marker Undeployed","");
+        telemetry.update();
+        idle();
+
         robot.encoderRun(75,.35);
         sleep(10000);
         robot.finishMovement();

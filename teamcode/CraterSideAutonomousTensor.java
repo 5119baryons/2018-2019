@@ -293,6 +293,13 @@ public class CraterSideAutonomousTensor extends LinearOpMode{
             telemetry.update();
             idle();
 
+            robot.undeployTeamMarker();
+            idle();
+            sleep(1000);
+            telemetry.addData("Team Marker Undeployed","");
+            telemetry.update();
+            idle();
+
             robot.encoderTurn(-60,.35);
             sleep(1500);
             robot.finishMovement();

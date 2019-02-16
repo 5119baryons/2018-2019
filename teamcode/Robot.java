@@ -1048,7 +1048,7 @@ public class Robot {
 
     public void incrementTmDown(){
         if(tm.getPosition()-.03<0)
-            tm.setPosition(0);
+            tm.setPosition(.3);
         else
             tm.setPosition(tm.getPosition()-.03);
     }
@@ -1149,7 +1149,7 @@ public class Robot {
 //    }
 
     public void moveLifter(double power){
-        lifter.setPower(power/2);
+        lifter.setPower(power/4);
     }
 
     public int getLifterPosition(){

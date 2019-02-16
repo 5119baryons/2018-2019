@@ -144,8 +144,8 @@ public class TwoControllerTeleOp extends OpMode {
 //        telemetry.addData("Robot.Rotation: ",robot.rotation);
 //        telemetry.addData("Is Blue on Left? ",robot.isBlueOnLeft());
 
-        double leftPower=Math.pow(controller1.left_stick_y,3)*.5;
-        double rightPower=Math.pow(controller1.right_stick_y,3)*.5;
+        double leftPower=Math.pow(controller1.left_stick_y,3)*.625;
+        double rightPower=Math.pow(controller1.right_stick_y,3)*.625;
 
         if(controller2.rightBumper()) {
             leftPower += -.3;
