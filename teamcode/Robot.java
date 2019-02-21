@@ -76,7 +76,7 @@ public class Robot {
     private final Servo tm;
 //    private final CRServo sweeper;
 //    private final Servo relicClaw;
-  //  public final NormalizedColorSensor colorSensor;
+    public final NormalizedColorSensor colorSensor;
 
     //up,up,down,down,left,right,left,right, b, a
 
@@ -94,6 +94,8 @@ public class Robot {
     private final int LOCK_DISTANCE = -2100;//2600
     private final int UNLOCK_DISTANCE = -2500;//2900
     private final int LIFT_DISTANCE=-1400;//600
+    private final double CAMERA_HEIGHT=12;
+
 
     //Rake variables
     private final int MAX_RAKE_TICKS=2800;
@@ -262,7 +264,7 @@ public class Robot {
         flipper = hardwareMap.dcMotor.get("flipper");
         tm = hardwareMap.servo.get("tm");
   //      sweeper = hardwareMap.crservo.get("sweeper");
-     //   colorSensor = hardwareMap.get(NormalizedColorSensor.class, "cs");
+        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "cs");
 
 //        rake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 //        rake.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -576,6 +578,183 @@ public class Robot {
         return 0;
     }
 
+    public int autoCollectTensorFlow() {
+        boolean foundSilver = false;
+        double angleToObject=0;
+        if (tfod != null) {
+            tfod.activate();
+        }
+while(runtime.seconds()<20) {
+    while (!foundSilver) {
+        if (runtime.seconds() > 20)
+            return 0;
+        if (tfod != null) {
+            // getUpdatedRecognitions() will return null if no new information is available since
+            // the last time that call was made.
+            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+            if (updatedRecognitions != null) {
+                telemetry.addData("# Object Detected", updatedRecognitions.size());
+                for (Recognition recognition : updatedRecognitions)
+                    if (recognition.getLabel().equals(LABEL_SILVER_MINERAL)) {
+                        foundSilver = true;
+                        angleToObject = recognition.estimateAngleToObject(DEGREES);
+                    }
+            }
+        }
+    }
+    double horizontalDistance = CAMERA_HEIGHT / Math.tan(angleToObject);
+    int ticks = (int) (horizontalDistance * (1 / (2 * Math.PI * RADIUS_OF_SPOOL)) * TICKS_PER_MOTOR_REV);
+    rake.setTargetPosition(Math.min(ticks, MAX_RAKE_TICKS));
+    rake.setPower(.3);
+    while (rake.getCurrentPosition() < rake.getTargetPosition() - 20) {
+        if (runtime.seconds() > 20)
+            return 0;
+    }
+    startCollection();
+    while(STATE==2) {
+        collect(false);
+        if (runtime.seconds() > 25)
+            return 0;
+    }
+    retract();
+    while(STATE==4){
+        if (runtime.seconds() > 20)
+            return 0;
+    }
+    wrist.setPosition(WRIST_MIDDLE);
+}
+    return 0;
+    }
+
+    public void goForward(){
+
+    }
+
+    public void goBackward(){
+
+    }
+
+    public int autoCollectColor(){
+
+        while(runtime.seconds() > 20){
+            wrist.setPosition(WRIST_HOVER);
+            int count = 0;
+            boolean fullExtension = false;
+            int maxExtension = MAX_RAKE_TICKS;
+            int degreesTurned = 0;
+            int incrementAngle= 10;
+            while(count < 2) {
+                while (!fullExtension) {
+
+                    rake.setTargetPosition(maxExtension);
+                    rake.setPower(0.1);
+
+                    if(isWhite()){
+                        rake.setPower(0);
+                        startCollection();
+                        while(STATE==2) {
+                            collect(false);
+                            if (runtime.seconds() > 25)
+                                return 0;
+                        }
+                        count++;
+                        if(count == 2){
+                            return 0;
+                        }
+                        rake.setPower(0.1);
+                    }
+
+                    if(rake.getCurrentPosition() > (maxExtension - 30)){
+                        fullExtension = true;
+                    }
+                }
+                if(count == 2){
+                    return 0;
+                }
+                encoderTurn(incrementAngle, 0.3);
+                degreesTurned += incrementAngle;
+                while (fullExtension) {
+
+                    rake.setTargetPosition(0);
+                    rake.setPower(0.3);
+
+                    if(isWhite()){
+                        rake.setPower(0);
+                        startCollection();
+                        while(STATE==2) {
+                            collect(false);
+                            if (runtime.seconds() > 25)
+                                return 0;
+                        }
+                        count++;
+                        if(count == 2){
+                            return 0;
+                        }
+                        rake.setPower(0.1);
+                    }
+
+                    if(rake.getCurrentPosition() < 30){
+                        fullExtension = false;
+                    }
+                }
+                if(count == 2){
+                    return 0;
+                }
+                encoderTurn(incrementAngle, 0.3);
+                degreesTurned += incrementAngle;
+            }
+
+        }
+
+
+        return 0;
+    }
+
+    public boolean isWhite(){
+        NormalizedRGBA colors = colorSensor.getNormalizedColors();
+
+            Color.colorToHSV(colors.toColor(), hsvValues);
+//        telemetry.addLine()
+//                .addData("H", "%.3f", hsvValues[0])
+//                .addData("S", "%.3f", hsvValues[1])
+//                .addData("V", "%.3f", hsvValues[2]);
+//        telemetry.addLine()
+//                .addData("a", "%.3f", colors.alpha)
+//                .addData("r", "%.3f", colors.red)
+//                .addData("g", "%.3f", colors.green)
+//                .addData("b", "%.3f", colors.blue);
+
+            /** We also display a conversion of the colors to an equivalent Android color integer.
+             * @see Color */
+            int color = colors.toColor();
+       /* telemetry.addLine("raw Android color: ")
+                .addData("a", "%02x", Color.alpha(color))
+                .addData("r", "%02x", Color.red(color))
+                .addData("g", "%02x", Color.green(color))
+                .addData("b", "%02x", Color.blue(color));
+*/
+            float max = Math.max(Math.max(Math.max(colors.red, colors.green), colors.blue), colors.alpha);
+            colors.red   /= max;
+            colors.green /= max;
+            colors.blue  /= max;
+            color = colors.toColor();
+
+            telemetry.addLine("normalized color:  ")
+                    .addData("a", "%02x", Color.alpha(color))
+                    .addData("r", "%02x", Color.red(color))
+                    .addData("g", "%02x", Color.green(color))
+                    .addData("b", "%02x", Color.blue(color))
+                    .addData("blue - red: ", (int)Color.blue(color)-(int)Color.red(color));
+            telemetry.update();
+//take two values of "blue-red", multiply the most negative one by -1 and average the two numbers, replace the 52 below with the average
+
+            return (((int)Color.blue(color)) > ((int)Color.red(color)));
+
+//        if(((int)Color.red(color))-22>((int)Color.blue(color)))
+//            return false;
+//        return true;
+
+    }
 
     public void shutdownTensorFlow(){
         tfod.shutdown();
