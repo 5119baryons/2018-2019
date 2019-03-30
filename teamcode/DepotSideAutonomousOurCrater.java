@@ -43,19 +43,19 @@ public class DepotSideAutonomousOurCrater extends LinearOpMode{
 
         robot.shutdownTensorFlow();
 
-//        robot.unlatch();
-//        sleep(150);
-//        idle();
-//        telemetry.addData("done unlatching","");
-//        telemetry.update();
-//        idle();
-//
-//        robot.unlock();
-//        sleep(2500);
-//        idle();
-//        telemetry.addData("done unlocking","");
-//        telemetry.update();
-//        idle();
+        robot.unlatch();
+        sleep(200);
+        idle();
+        telemetry.addData("done unlatching","");
+        telemetry.update();
+        idle();
+
+        robot.unlock();
+        sleep(2500);
+        idle();
+        telemetry.addData("done unlocking","");
+        telemetry.update();
+        idle();
 
 
         if(path==1){//left

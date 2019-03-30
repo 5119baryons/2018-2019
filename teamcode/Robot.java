@@ -76,7 +76,7 @@ public class Robot {
     private final Servo tm;
 //    private final CRServo sweeper;
 //    private final Servo relicClaw;
-    public final NormalizedColorSensor colorSensor;
+ //   public final NormalizedColorSensor colorSensor;
 
     //up,up,down,down,left,right,left,right, b, a
 
@@ -264,7 +264,7 @@ public class Robot {
         flipper = hardwareMap.dcMotor.get("flipper");
         tm = hardwareMap.servo.get("tm");
   //      sweeper = hardwareMap.crservo.get("sweeper");
-        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "cs");
+  //      colorSensor = hardwareMap.get(NormalizedColorSensor.class, "cs");
 
 //        rake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 //        rake.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -280,10 +280,12 @@ public class Robot {
         right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         flipper.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+      //zax  lifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         lifter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lifter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lifter.setDirection(DcMotorSimple.Direction.FORWARD);
+
 
         flipper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
@@ -711,49 +713,49 @@ while(runtime.seconds()<20) {
     }
 
     public boolean isWhite(){
-        NormalizedRGBA colors = colorSensor.getNormalizedColors();
-
-            Color.colorToHSV(colors.toColor(), hsvValues);
-//        telemetry.addLine()
-//                .addData("H", "%.3f", hsvValues[0])
-//                .addData("S", "%.3f", hsvValues[1])
-//                .addData("V", "%.3f", hsvValues[2]);
-//        telemetry.addLine()
-//                .addData("a", "%.3f", colors.alpha)
-//                .addData("r", "%.3f", colors.red)
-//                .addData("g", "%.3f", colors.green)
-//                .addData("b", "%.3f", colors.blue);
-
-            /** We also display a conversion of the colors to an equivalent Android color integer.
-             * @see Color */
-            int color = colors.toColor();
-       /* telemetry.addLine("raw Android color: ")
-                .addData("a", "%02x", Color.alpha(color))
-                .addData("r", "%02x", Color.red(color))
-                .addData("g", "%02x", Color.green(color))
-                .addData("b", "%02x", Color.blue(color));
-*/
-            float max = Math.max(Math.max(Math.max(colors.red, colors.green), colors.blue), colors.alpha);
-            colors.red   /= max;
-            colors.green /= max;
-            colors.blue  /= max;
-            color = colors.toColor();
-
-            telemetry.addLine("normalized color:  ")
-                    .addData("a", "%02x", Color.alpha(color))
-                    .addData("r", "%02x", Color.red(color))
-                    .addData("g", "%02x", Color.green(color))
-                    .addData("b", "%02x", Color.blue(color))
-                    .addData("blue - red: ", (int)Color.blue(color)-(int)Color.red(color));
-            telemetry.update();
-//take two values of "blue-red", multiply the most negative one by -1 and average the two numbers, replace the 52 below with the average
-
-            return (((int)Color.blue(color)) > ((int)Color.red(color)));
-
-//        if(((int)Color.red(color))-22>((int)Color.blue(color)))
-//            return false;
-//        return true;
-
+//        NormalizedRGBA colors = colorSensor.getNormalizedColors();
+//
+//            Color.colorToHSV(colors.toColor(), hsvValues);
+////        telemetry.addLine()
+////                .addData("H", "%.3f", hsvValues[0])
+////                .addData("S", "%.3f", hsvValues[1])
+////                .addData("V", "%.3f", hsvValues[2]);
+////        telemetry.addLine()
+////                .addData("a", "%.3f", colors.alpha)
+////                .addData("r", "%.3f", colors.red)
+////                .addData("g", "%.3f", colors.green)
+////                .addData("b", "%.3f", colors.blue);
+//
+//            /** We also display a conversion of the colors to an equivalent Android color integer.
+//             * @see Color */
+//            int color = colors.toColor();
+//       /* telemetry.addLine("raw Android color: ")
+//                .addData("a", "%02x", Color.alpha(color))
+//                .addData("r", "%02x", Color.red(color))
+//                .addData("g", "%02x", Color.green(color))
+//                .addData("b", "%02x", Color.blue(color));
+//*/
+//            float max = Math.max(Math.max(Math.max(colors.red, colors.green), colors.blue), colors.alpha);
+//            colors.red   /= max;
+//            colors.green /= max;
+//            colors.blue  /= max;
+//            color = colors.toColor();
+//
+//            telemetry.addLine("normalized color:  ")
+//                    .addData("a", "%02x", Color.alpha(color))
+//                    .addData("r", "%02x", Color.red(color))
+//                    .addData("g", "%02x", Color.green(color))
+//                    .addData("b", "%02x", Color.blue(color))
+//                    .addData("blue - red: ", (int)Color.blue(color)-(int)Color.red(color));
+//            telemetry.update();
+////take two values of "blue-red", multiply the most negative one by -1 and average the two numbers, replace the 52 below with the average
+//
+//            return (((int)Color.blue(color)) > ((int)Color.red(color)));
+//
+////        if(((int)Color.red(color))-22>((int)Color.blue(color)))
+////            return false;
+////        return true;
+    return true;
     }
 
     public void shutdownTensorFlow(){
@@ -1249,7 +1251,7 @@ while(runtime.seconds()<20) {
 //        lifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 //        lifter.setPower(0.1);
         lifter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        lifter.setPower(.6);
+        lifter.setPower(1);
     }
 
     public void lock(){
@@ -1329,6 +1331,26 @@ while(runtime.seconds()<20) {
 
     public void moveLifter(double power){
         lifter.setPower(power/4);
+    }
+
+    public void incrementLifterUp(double power){
+        lifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lifter.setTargetPosition(Math.max(lifter.getCurrentPosition()-(25),-5000));
+        lifter.setPower(0.3);
+    }
+
+    public void lifterTelem(){
+        telemetry.addData("Lifter Target: ",Math.max(lifter.getCurrentPosition()-(25),-5000));
+    }
+
+    public void incrementLifterDown(double power){
+        lifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lifter.setTargetPosition(Math.min(lifter.getCurrentPosition()+(int)(power*5),0));
+        lifter.setPower(0.3);
+    }
+    public void setLifterPosition(int position){
+        lifter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lifter.setTargetPosition(position);
     }
 
     public int getLifterPosition(){

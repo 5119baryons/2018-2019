@@ -144,14 +144,18 @@ public class TwoControllerTeleOp extends OpMode {
 //        telemetry.addData("Robot.Rotation: ",robot.rotation);
 //        telemetry.addData("Is Blue on Left? ",robot.isBlueOnLeft());
 
-        double leftPower=Math.pow(controller1.left_stick_y,3)*.625;
-        double rightPower=Math.pow(controller1.right_stick_y,3)*.625;
+        double leftPower=Math.pow(controller1.left_stick_y,3)*.8;
+        double rightPower=Math.pow(controller1.right_stick_y,3)*.8;
 
-        if(controller2.rightBumper()) {
+        if(controller1.rightBumper() && controller1.leftBumper()){
+            rightPower=.3;
+            leftPower=.3;
+        }
+        else if(controller2.rightBumper() || controller1.rightBumper()) {
             leftPower += -.3;
             rightPower += .3;
         }
-        else if(controller2.leftBumper()) {
+        else if(controller2.leftBumper() || controller1.leftBumper()) {
             leftPower += .3;
             rightPower += -.3;
         }
@@ -178,6 +182,8 @@ public class TwoControllerTeleOp extends OpMode {
             robot.setMotors(leftPower, rightPower);
 //       }
 
+//        if(controller2.dpadUpOnce())
+//            robot.toggleLifter();
 
         if(controller2.XOnce()) {
             if (robot.getTmPosition() == 0)
@@ -216,12 +222,20 @@ public class TwoControllerTeleOp extends OpMode {
 //        if(controller2.XOnce())
 //            robot.customtoggleLifter();
 
+//        if(controller2.rightTriggerPressed())
+//            robot.incrementLifterUp(controller2.right_trigger);
+//        else if(controller2.leftTriggerPressed())
+//            robot.incrementLifterDown(controller2.left_trigger);
+       // else
+       //     robot.moveLifter(0);
+
         if(controller2.rightTriggerPressed())
-             robot.moveLifter(controller2.right_trigger*-1);
+            robot.moveLifter(controller2.right_trigger*-1);
         else if(controller2.leftTriggerPressed())
             robot.moveLifter(controller2.left_trigger);
         else
             robot.moveLifter(0);
+
 
         if(controller1.rightTriggerPressed())
             robot.setFlipperPower(controller1.right_trigger);
@@ -274,10 +288,10 @@ if(controller2.XOnce())
 
         //End of STATE MACHINE Code
 
-        if(controller2.dpadUpOnce())
-            robot.incrementWrist();
-        if(controller2.dpadDownOnce())
-            robot.decrementWrist();
+//        if(controller2.dpadUpOnce())
+//            robot.incrementWrist();
+//        if(controller2.dpadDownOnce())
+//            robot.decrementWrist();
 
         telemetry.addData("Rake Current Position: ",robot.getRakePosition());
         telemetry.addData("Wrist Current Position: ",robot.getWristPosition());

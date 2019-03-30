@@ -71,6 +71,7 @@ public class TeleOpPractice extends OpMode {
         telemetry.addData("Gyro Ready?", robot.isGyroCalibrated() ? "YES" : "no.");
         // telemetry.addData("Accelerometer Ready?", robot.isAccelerometerCalibrated() ? "YES" : "no.");
         telemetry.update();
+        robot.setLifterPosition(0);
     }
 
     @Override
@@ -218,12 +219,10 @@ public class TeleOpPractice extends OpMode {
 //        if(controller2.XOnce())
 //            robot.customtoggleLifter();
 
-        if(controller2.rightTriggerPressed())
-            robot.moveLifter(controller2.right_trigger*-1);
-        else if(controller2.leftTriggerPressed())
-            robot.moveLifter(controller2.left_trigger);
-        else
-            robot.moveLifter(0);
+        if(controller2.rightTriggerOnce())
+            robot.incrementLifterUp(5);
+        else if(controller2.leftTriggerOnce())
+            robot.incrementLifterDown(5);
 
         if(controller1.rightTriggerPressed())
             robot.setFlipperPower(controller1.right_trigger);
@@ -294,7 +293,7 @@ public class TeleOpPractice extends OpMode {
 //        telemetry.addData("Current Velocity: ", robot.currentVeloity);
 //        telemetry.addData("Current Acceleration: ", robot.currentAcceleration);
 //        robot.getGold();
-//        telemetry.addData("Lifter Ticks: ", robot.getLifterPosition());
+        telemetry.addData("Lifter Ticks: ", robot.getLifterPosition());
 //        telemetry.addData("Flipper Ticks: ", robot.getFlipperPosition());
 //        telemetry.addData("Left Ticks: ", robot.getLeftPosition());
 //        telemetry.addData("Right Ticks: ", robot.getRightPosition());
